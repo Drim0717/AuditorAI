@@ -29,8 +29,11 @@ import { AndroidFrame } from './components/AndroidFrame';
 import { PrizeCheckerModal } from './components/PrizeCheckerModal';
 import { AuditHistoryModal } from './components/AuditHistoryModal';
 import { LotteryCatalogModal } from './components/LotteryCatalogModal';
+import { AndroidIntegrationModal } from './components/AndroidIntegrationModal';
+import { usePWAInstall } from './utils/usePWAInstall';
 
 export default function App() {
+  const { isInstallable, install } = usePWAInstall();
   const [viewMode, setViewMode] = useState<'desktop' | 'android'>('desktop');
   const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [currentAudit, setCurrentAudit] = useState<AuditResult | null>(null);
@@ -43,6 +46,7 @@ export default function App() {
   const [showPrizeModal, setShowPrizeModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [showCatalogModal, setShowCatalogModal] = useState(false);
+  const [showAndroidModal, setShowAndroidModal] = useState(false);
 
   // Winning numbers for day
   const [winningNumbers, setWinningNumbers] = useState<Record<string, string>>({});
@@ -436,6 +440,22 @@ export default function App() {
               </button>
             </div>
 
+            {/* Android Readiness / Install button */}
+            <button
+              onClick={() => {
+                if (isInstallable) {
+                  install();
+                } else {
+                  setShowAndroidModal(true);
+                }
+              }}
+              className="px-3 py-1.5 rounded-xl border border-emerald-300 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 text-xs font-bold flex items-center gap-1.5 transition-colors shadow-xs"
+              title="Información e instalación de app en Android"
+            >
+              <Smartphone className="w-3.5 h-3.5 text-emerald-600" />
+              <span className="hidden sm:inline">¿Listo en Android?</span>
+            </button>
+
             {/* Master Lottery Catalog button */}
             <button
               onClick={() => setShowCatalogModal(true)}
@@ -746,6 +766,12 @@ export default function App() {
           }
         }}
         onClearHistory={() => setHistory([])}
+      />
+
+      <AndroidIntegrationModal
+        isOpen={showAndroidModal}
+        onClose={() => setShowAndroidModal(false)}
+        serverUrl={typeof window !== 'undefined' ? window.location.origin : ''}
       />
     </div>
   );
