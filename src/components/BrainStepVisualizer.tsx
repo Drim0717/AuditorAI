@@ -135,7 +135,7 @@ export const BrainStepVisualizer: React.FC<BrainStepVisualizerProps> = ({
         <div className="mt-3 p-3 bg-slate-900 rounded-lg text-slate-200 font-mono text-xs overflow-x-auto border border-slate-800">
           <div className="flex items-center justify-between pb-1.5 mb-1.5 border-b border-slate-800 text-[11px] text-slate-400">
             <span>&lt;pensamiento&gt; (Cadena de razonamiento del modelo)</span>
-            <span className="text-emerald-400 font-sans">gemini-3.8-flash</span>
+            <span className="text-emerald-400 font-sans">gemini-2.5-flash</span>
           </div>
           <pre className="whitespace-pre-wrap leading-relaxed">{audit.pensamiento}</pre>
         </div>
