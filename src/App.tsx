@@ -17,6 +17,7 @@ import {
   FileText,
   Database,
   AlertTriangle,
+  Image,
 } from 'lucide-react';
 import { AuditResult, QuadrantAudit } from './types/lottery';
 import { SAMPLE_SHEETS, generateTicketSheetCanvas, SampleSheetDefinition } from './utils/sampleSheets';
@@ -30,6 +31,8 @@ import { PrizeCheckerModal } from './components/PrizeCheckerModal';
 import { AuditHistoryModal } from './components/AuditHistoryModal';
 import { LotteryCatalogModal } from './components/LotteryCatalogModal';
 import { AndroidIntegrationModal } from './components/AndroidIntegrationModal';
+import { UnresolvedTicketsModal } from './components/UnresolvedTicketsModal';
+import { UnresolvedTicket } from './types/lottery';
 import { usePWAInstall } from './utils/usePWAInstall';
 
 export default function App() {
@@ -53,6 +56,8 @@ export default function App() {
 
   // Session history
   const [history, setHistory] = useState<AuditResult[]>([]);
+  const [unresolvedTickets, setUnresolvedTickets] = useState<UnresolvedTicket[]>([]);
+  const [showUnresolvedModal, setShowUnresolvedModal] = useState(false);
 
   // Hidden inputs
   const cameraInputRef = useRef<HTMLInputElement>(null);
@@ -207,109 +212,41 @@ export default function App() {
       const checkedAudit = checkSheetPrizes(finalAudit, winningNumbers);
       setCurrentAudit(checkedAudit);
 
+      // Check if no numbers were found
+      const totalPlays = checkedAudit.quadrants.reduce((sum, q) => sum + (q.plays?.length || 0), 0);
+      if (totalPlays === 0) {
+        setUnresolvedTickets((prev) => [
+          {
+            id: `unresolved-${Date.now()}`,
+            date: new Date(),
+            imageThumbnail: base64Url,
+            reason: 'No se detectaron números',
+          },
+          ...prev
+        ]);
+        setErrorMessage('No se detectaron números. La foto fue movida a "No Reconocidos".');
+        setCurrentAudit(null);
+        return;
+      }
+
       // Add to session history
       setHistory((prev) => [checkedAudit, ...prev]);
     } catch (err: any) {
-      console.warn('Fallo en endpoint en vivo, utilizando auditoría local de contingencia:', err);
+      console.warn('Error al procesar:', err);
+      
+      setUnresolvedTickets((prev) => [
+        {
+          id: `unresolved-${Date.now()}`,
+          date: new Date(),
+          imageThumbnail: base64Url,
+          reason: err.message || 'Error en el procesamiento',
+        },
+        ...prev
+      ]);
       setErrorMessage(
-        `Aviso: ${err.message}. Se activó la auditoría local con el modelo de reglas del Cerebro.`
+        `Error al auditar el ticket. Se movió a "No Reconocidos".`
       );
-
-      // Fallback local calculation
-      const catalog = getMasterLotteries();
-      const defaultQuads: QuadrantAudit[] = [
-        {
-          id: 'arriba_izq',
-          name: 'Arriba IZQ',
-          isEmpty: false,
-          lotteries: ['NY AM', 'FL AM'],
-          plays: [
-            { number: '22', amount: 5, raw: '22-5', confidence: 'high' },
-            { number: '33', amount: 5, raw: '33-5', confidence: 'high' },
-            { number: '99', amount: 5, raw: '99-5', confidence: 'high' },
-          ],
-          subtotalPlays: 15,
-          lotteryMultiplier: 2,
-          calculatedTotal: 30,
-          declaredCircleTotal: 30,
-          confirmedTotal: 30,
-          verificationStatus: 'match',
-          overallHandwritingConfidence: 'high',
-        },
-        {
-          id: 'arriba_der',
-          name: 'Arriba DER',
-          isEmpty: false,
-          lotteries: ['NY AM', 'FL AM'],
-          plays: [
-            { number: '44', amount: 2, raw: '44-2', confidence: 'high' },
-            { number: '99', amount: 2, raw: '99-2', confidence: 'high' },
-            { number: '01', amount: 3, raw: '01-3', confidence: 'high' },
-            { number: '10', amount: 5, raw: '10-5', confidence: 'high' },
-          ],
-          subtotalPlays: 12,
-          lotteryMultiplier: 2,
-          calculatedTotal: 24,
-          declaredCircleTotal: 24,
-          confirmedTotal: 24,
-          verificationStatus: 'match',
-          overallHandwritingConfidence: 'high',
-        },
-        {
-          id: 'abajo_izq',
-          name: 'Abajo IZQ',
-          isEmpty: false,
-          lotteries: ['NJ AM', 'FL AM'],
-          plays: [{ number: '06', amount: 2, raw: '06-2', confidence: 'high' }],
-          subtotalPlays: 2,
-          lotteryMultiplier: 1,
-          calculatedTotal: 2,
-          declaredCircleTotal: 2,
-          confirmedTotal: 2,
-          verificationStatus: 'match',
-          overallHandwritingConfidence: 'high',
-        },
-        {
-          id: 'abajo_der',
-          name: 'Abajo DER',
-          isEmpty: false,
-          lotteries: ['FL AM'],
-          plays: [{ number: '77', amount: 10, raw: '77-10', confidence: 'high' }],
-          subtotalPlays: 10,
-          lotteryMultiplier: 1,
-          calculatedTotal: 10,
-          declaredCircleTotal: 10,
-          confirmedTotal: 10,
-          verificationStatus: 'match',
-          overallHandwritingConfidence: 'high',
-        },
-      ];
-
-      const validatedFallbackQuads = defaultQuads.map((q) => {
-        const valList = q.lotteries.map((l) => validateAndNormalizeLottery(l, catalog));
-        return {
-          ...q,
-          validatedLotteries: valList,
-          hasInvalidLottery: false,
-        };
-      });
-
-      const fallbackAudit: AuditResult = {
-        id: `audit-${Date.now()}`,
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        pageNumber: '1',
-        quadrants: validatedFallbackQuads,
-        totalPageSale: 66,
-        totalPagePrize: 0,
-        pensamiento: `<pensamiento>\n- Auditoría local con validación de códigos de lotería.\n</pensamiento>`,
-        formattedOutput: `Página 1\nArriba IZQ: NY AM, FL AM | Venta: 30 | Premio: (Esperando números)\nArriba DER: NY AM, FL AM | Venta: 24 | Premio: (Esperando números)\nAbajo IZQ: NJ AM, FL AM | Venta: 2 | Premio: (Esperando números)\nAbajo DER: FL AM | Venta: 10 | Premio: (Esperando números)\nVenta Total: 66`,
-        imageThumbnail: base64Url,
-        hasLotteryValidationWarnings: false,
-      };
-
-      const checkedAudit = checkSheetPrizes(fallbackAudit, winningNumbers);
-      setCurrentAudit(checkedAudit);
-      setHistory((prev) => [checkedAudit, ...prev]);
+      setCurrentAudit(null);
     } finally {
       setIsProcessing(false);
     }
@@ -474,6 +411,16 @@ export default function App() {
             >
               <Award className="w-3.5 h-3.5 text-amber-600" />
               <span className="hidden sm:inline">Premios</span>
+            </button>
+
+            {/* Unresolved Tickets button */}
+            <button
+              onClick={() => setShowUnresolvedModal(true)}
+              className="px-3 py-1.5 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-900 text-xs font-bold flex items-center gap-1.5 transition-colors shadow-xs"
+              title="Tickets No Reconocidos"
+            >
+              <Image className="w-3.5 h-3.5 text-rose-600" />
+              <span className="hidden sm:inline">No Reconocidos ({unresolvedTickets.length})</span>
             </button>
 
             {/* History button */}
@@ -766,6 +713,12 @@ export default function App() {
           }
         }}
         onClearHistory={() => setHistory([])}
+      />
+
+      <UnresolvedTicketsModal
+        isOpen={showUnresolvedModal}
+        onClose={() => setShowUnresolvedModal(false)}
+        unresolvedTickets={unresolvedTickets}
       />
 
       <AndroidIntegrationModal

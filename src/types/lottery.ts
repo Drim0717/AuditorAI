@@ -52,6 +52,13 @@ export interface AuditResult {
   hasLotteryValidationWarnings?: boolean;
 }
 
+export interface UnresolvedTicket {
+  id: string;
+  date: Date; // Keep full Date object to determine shift
+  imageThumbnail: string;
+  reason: string;
+}
+
 export interface WinningNumberEntry {
   lottery: string;
   first: string;
