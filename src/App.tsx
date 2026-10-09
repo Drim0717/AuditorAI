@@ -12,12 +12,13 @@ import {
   Award,
   Sparkles,
   Smartphone,
-  Monitor,
   RefreshCw,
   FileText,
   Database,
   AlertTriangle,
   Image,
+  Menu,
+  X,
 } from 'lucide-react';
 import { AuditResult, QuadrantAudit } from './types/lottery';
 import { SAMPLE_SHEETS, generateTicketSheetCanvas, SampleSheetDefinition } from './utils/sampleSheets';
@@ -25,7 +26,6 @@ import { checkSheetPrizes } from './utils/prizeCalculator';
 import { getMasterLotteries, validateAndNormalizeLottery } from './utils/lotteryMasterCatalog';
 import { QuadrantCard } from './components/QuadrantCard';
 import { SheetImageOverlay } from './components/SheetImageOverlay';
-import { AndroidFrame } from './components/AndroidFrame';
 import { PrizeCheckerModal } from './components/PrizeCheckerModal';
 import { AuditHistoryModal } from './components/AuditHistoryModal';
 import { LotteryCatalogModal } from './components/LotteryCatalogModal';
@@ -36,7 +36,7 @@ import { usePWAInstall } from './utils/usePWAInstall';
 
 export default function App() {
   const { isInstallable, install } = usePWAInstall();
-  const [viewMode, setViewMode] = useState<'desktop' | 'android'>('desktop');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [currentAudit, setCurrentAudit] = useState<AuditResult | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -62,9 +62,9 @@ export default function App() {
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
 
-  // Initialize with sample sheet on start
+  // Start with clean empty state to allow direct photo or gallery capture
   useEffect(() => {
-    loadSampleSheet(SAMPLE_SHEETS[0]);
+    // Initialized empty as requested
   }, []);
 
   // Listen to paste event (e.g. screenshot pasted directly)
@@ -343,36 +343,8 @@ export default function App() {
             </div>
           </div>
 
-          {/* Action buttons & View mode switch */}
-          <div className="flex items-center gap-2">
-            {/* View Mode Toggle */}
-            <div className="bg-slate-100 p-1 rounded-xl flex items-center border border-slate-200">
-              <button
-                onClick={() => setViewMode('desktop')}
-                className={`px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all ${
-                  viewMode === 'desktop'
-                    ? 'bg-white text-blue-700 shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-                title="Modo Auditor de Escritorio"
-              >
-                <Monitor className="w-3.5 h-3.5" />
-                <span className="hidden md:inline">Auditoría Completa</span>
-              </button>
-              <button
-                onClick={() => setViewMode('android')}
-                className={`px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all ${
-                  viewMode === 'android'
-                    ? 'bg-blue-600 text-white shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-                title="Modo App Móvil Android"
-              >
-                <Smartphone className="w-3.5 h-3.5" />
-                <span className="hidden md:inline">Vista Android</span>
-              </button>
-            </div>
-
+          {/* Action buttons - Desktop View Only */}
+          <div className="hidden lg:flex items-center gap-2">
             {/* Android Readiness / Install button */}
             <button
               onClick={() => {
@@ -386,7 +358,7 @@ export default function App() {
               title="Información e instalación de app en Android"
             >
               <Smartphone className="w-3.5 h-3.5 text-emerald-600" />
-              <span className="hidden sm:inline">¿Listo en Android?</span>
+              <span>¿Listo en Android?</span>
             </button>
 
             {/* Master Lottery Catalog button */}
@@ -396,7 +368,7 @@ export default function App() {
               title="Base de Datos Maestra de Códigos de Lotería Válidos"
             >
               <Database className="w-3.5 h-3.5 text-blue-600" />
-              <span className="hidden sm:inline">Lista Maestra ({masterCatalogCount})</span>
+              <span>Lista Maestra ({masterCatalogCount})</span>
             </button>
 
             {/* Prize checker modal button */}
@@ -406,7 +378,7 @@ export default function App() {
               title="Configurar números ganadores del día"
             >
               <Award className="w-3.5 h-3.5 text-amber-600" />
-              <span className="hidden sm:inline">Premios</span>
+              <span>Premios</span>
             </button>
 
             {/* Unresolved Tickets button */}
@@ -416,7 +388,7 @@ export default function App() {
               title="Tickets No Reconocidos"
             >
               <Image className="w-3.5 h-3.5 text-rose-600" />
-              <span className="hidden sm:inline">No Reconocidos ({unresolvedTickets.length})</span>
+              <span>No Reconocidos ({unresolvedTickets.length})</span>
             </button>
 
             {/* History button */}
@@ -425,11 +397,109 @@ export default function App() {
               className="px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-xs"
             >
               <History className="w-3.5 h-3.5 text-slate-500" />
-              <span className="hidden sm:inline">Libro ({history.length})</span>
+              <span>Libro ({history.length})</span>
+            </button>
+          </div>
+
+          {/* Hamburger Menu Button - Mobile View Only */}
+          <div className="flex lg:hidden items-center">
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="p-2 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 transition-all active:scale-95"
+              aria-label="Toggle menu"
+            >
+              {isMobileMenuOpen ? (
+                <X className="w-6 h-6 text-slate-600" />
+              ) : (
+                <Menu className="w-6 h-6 text-slate-600" />
+              )}
             </button>
           </div>
         </div>
       </header>
+
+      {/* Mobile Hamburger Dropdown Menu */}
+      {isMobileMenuOpen && (
+        <div className="lg:hidden bg-white border-b border-slate-200 shadow-md py-3 px-4 space-y-2.5 transition-all animate-slide-down">
+          {/* Quick upload options in mobile header */}
+          <div className="grid grid-cols-2 gap-2.5 pb-3 border-b border-slate-100">
+            <button
+              onClick={() => {
+                setIsMobileMenuOpen(false);
+                cameraInputRef.current?.click();
+              }}
+              className="py-2.5 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm active:scale-95 transition-all"
+            >
+              <Camera className="w-4 h-4 shrink-0" /> Tomar Foto
+            </button>
+            <button
+              onClick={() => {
+                setIsMobileMenuOpen(false);
+                galleryInputRef.current?.click();
+              }}
+              className="py-2.5 px-3 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs flex items-center justify-center gap-1.5 active:scale-95 transition-all"
+            >
+              <Upload className="w-4 h-4 shrink-0 text-slate-500" /> Galería
+            </button>
+          </div>
+
+          <button
+            onClick={() => {
+              setIsMobileMenuOpen(false);
+              if (isInstallable) install();
+              else setShowAndroidModal(true);
+            }}
+            className="w-full text-left px-3.5 py-2.5 rounded-xl border border-emerald-300 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 text-xs font-bold flex items-center gap-2.5 transition-colors"
+          >
+            <Smartphone className="w-4 h-4 text-emerald-600 shrink-0" />
+            <span>¿Listo en Android? (Instalar App)</span>
+          </button>
+
+          <button
+            onClick={() => {
+              setIsMobileMenuOpen(false);
+              setShowCatalogModal(true);
+            }}
+            className="w-full text-left px-3.5 py-2.5 rounded-xl border border-blue-200 bg-blue-50/70 hover:bg-blue-100 text-blue-900 text-xs font-bold flex items-center gap-2.5 transition-colors"
+          >
+            <Database className="w-4 h-4 text-blue-600 shrink-0" />
+            <span>Lista Maestra ({masterCatalogCount})</span>
+          </button>
+
+          <button
+            onClick={() => {
+              setIsMobileMenuOpen(false);
+              setShowPrizeModal(true);
+            }}
+            className="w-full text-left px-3.5 py-2.5 rounded-xl border border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-900 text-xs font-bold flex items-center gap-2.5 transition-colors"
+          >
+            <Award className="w-4 h-4 text-amber-600 shrink-0" />
+            <span>Configurar Premios del Día</span>
+          </button>
+
+          <button
+            onClick={() => {
+              setIsMobileMenuOpen(false);
+              setShowUnresolvedModal(true);
+            }}
+            className="w-full text-left px-3.5 py-2.5 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-900 text-xs font-bold flex items-center gap-2.5 transition-colors"
+          >
+            <Image className="w-4 h-4 text-rose-600 shrink-0" />
+            <span>No Reconocidos ({unresolvedTickets.length})</span>
+          </button>
+
+          <button
+            onClick={() => {
+              setIsMobileMenuOpen(false);
+              setShowHistoryModal(true);
+            }}
+            className="w-full text-left px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-semibold flex items-center gap-2.5 transition-colors"
+          >
+            <History className="w-4 h-4 text-slate-500 shrink-0" />
+            <span>Libro de Sesión ({history.length})</span>
+          </button>
+        </div>
+      )}
 
       {/* Main Container */}
       <main className="max-w-7xl mx-auto px-4 py-5">
@@ -456,7 +526,7 @@ export default function App() {
               <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0" />
               <div>
                 <strong className="block font-bold">
-                  Atención: Se detectaron códigos de lotería no reconocidos en el Paso 2
+                  Atención: Se detectaron códigos de lotería no reconocidos
                 </strong>
                 <span className="text-amber-800">
                   Uno o más cuadrantes tienen casillas marcadas que no coinciden con la Lista Maestra. Puedes tocarlas en los cuadrantes para corregirlas con 1 clic.
@@ -473,150 +543,143 @@ export default function App() {
           </div>
         )}
 
+        <div className="space-y-5">
+          {/* Core Work Area: Responsive Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+            {/* Left Column: Image Sheet with 2x2 Overlay (5 cols) */}
+            <div className="lg:col-span-5 space-y-4">
+              <SheetImageOverlay
+                imageSrc={imageSrc}
+                audit={currentAudit}
+                selectedQuadrantId={selectedQuadrantId}
+                onSelectQuadrant={setSelectedQuadrantId}
+                onTriggerCamera={() => cameraInputRef.current?.click()}
+                onTriggerGallery={() => galleryInputRef.current?.click()}
+              />
 
-        {/* View Mode Switching: Android Phone Simulation vs Desktop Auditor */}
-        {viewMode === 'android' ? (
-          /* ANDROID VIEW */
-          <div className="py-2">
-            <AndroidFrame
-              audit={currentAudit}
-              isProcessing={isProcessing}
-              onTriggerCamera={() => cameraInputRef.current?.click()}
-              onTriggerGallery={() => galleryInputRef.current?.click()}
-              onCopyFormatted={handleCopyFormatted}
-              isCopied={isCopied}
-              onUpdateQuadrant={handleUpdateQuadrant}
-            >
-              {/* Photo View inside Android */}
-              <div className="rounded-xl overflow-hidden border border-slate-200 bg-slate-900 shadow-xs">
-                {imageSrc ? (
-                  <img
-                    src={imageSrc}
-                    alt="Ticket"
-                    className="w-full h-48 object-contain bg-slate-950"
-                  />
-                ) : (
-                  <div className="h-48 flex items-center justify-center text-slate-400 text-xs">
-                    Sin foto
-                  </div>
-                )}
-              </div>
-            </AndroidFrame>
-          </div>
-        ) : (
-          /* DESKTOP FULL AUDITOR VIEW */
-          <div className="space-y-5">
-          {/* Core Work Area: 2 Columns */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-              {/* Left Column: Image Sheet with 2x2 Overlay (5 cols) */}
-              <div className="lg:col-span-5 space-y-4">
-                <SheetImageOverlay
-                  imageSrc={imageSrc}
-                  audit={currentAudit}
-                  selectedQuadrantId={selectedQuadrantId}
-                  onSelectQuadrant={setSelectedQuadrantId}
-                />
-
-                {/* Formatted Output Box (Requested Format) */}
-                {currentAudit && (
-                  <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4">
-                    <div className="flex items-center justify-between pb-2 border-b border-slate-100">
-                      <div className="flex items-center gap-2">
-                        <FileText className="w-4 h-4 text-blue-600" />
-                        <h4 className="font-bold text-slate-800 text-xs uppercase tracking-wider">
-                          Formato de Salida Oficial
-                        </h4>
-                      </div>
-
-                      <div className="flex items-center gap-1.5">
-                        <button
-                          onClick={handleCopyFormatted}
-                          className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold flex items-center gap-1 transition-colors"
-                        >
-                          {isCopied ? (
-                            <>
-                              <Check className="w-3.5 h-3.5 text-emerald-600" /> Copiado
-                            </>
-                          ) : (
-                            <>
-                              <Copy className="w-3.5 h-3.5" /> Copiar Texto
-                            </>
-                          )}
-                        </button>
-                        <button
-                          onClick={() => {
-                            const text = encodeURIComponent(currentAudit.formattedOutput);
-                            window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
-                          }}
-                          className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1 transition-colors shadow-xs"
-                          title="Enviar reporte por WhatsApp"
-                        >
-                          <Share2 className="w-3.5 h-3.5" /> WhatsApp
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="mt-3 bg-slate-900 rounded-lg p-3.5 font-mono text-xs text-emerald-400 whitespace-pre-wrap leading-relaxed border border-slate-800 shadow-inner">
-                      {currentAudit.formattedOutput}
-                    </div>
-                  </div>
-                )}
+              {/* Always show file capture/upload actions on both mobile and desktop under image */}
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  onClick={() => cameraInputRef.current?.click()}
+                  className="py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md active:scale-95 transition-all"
+                >
+                  <Camera className="w-4 h-4 shrink-0" /> Tomar Foto Cámara
+                </button>
+                <button
+                  onClick={() => galleryInputRef.current?.click()}
+                  className="py-3 px-4 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 active:scale-95 transition-all"
+                >
+                  <Upload className="w-4 h-4 shrink-0 text-slate-500" /> Subir Imagen
+                </button>
               </div>
 
-              {/* Right Column: 2x2 Quadrants Detail Cards (7 cols) */}
-              <div className="lg:col-span-7 space-y-4">
-                {currentAudit ? (
-                  <>
-                    <div className="flex items-center justify-between bg-white px-4 py-3 rounded-xl border border-slate-200 shadow-xs">
-                      <div className="flex items-center gap-2">
-                        <span className="font-bold text-slate-800 text-sm">
-                          Página {currentAudit.pageNumber}
+              {/* Formatted Output Box (Requested Format) */}
+              {currentAudit && (
+                <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4">
+                  <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+                    <div className="flex items-center gap-2">
+                      <FileText className="w-4 h-4 text-blue-600" />
+                      <h4 className="font-bold text-slate-800 text-xs uppercase tracking-wider">
+                        Formato de Salida Oficial
+                      </h4>
+                    </div>
+
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        onClick={handleCopyFormatted}
+                        className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold flex items-center gap-1 transition-colors"
+                      >
+                        {isCopied ? (
+                          <>
+                            <Check className="w-3.5 h-3.5 text-emerald-600" /> Copiado
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="w-3.5 h-3.5" /> Copiar Texto
+                          </>
+                        )}
+                      </button>
+                      <button
+                        onClick={() => {
+                          const text = encodeURIComponent(currentAudit.formattedOutput);
+                          window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
+                        }}
+                        className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1 transition-colors shadow-xs"
+                        title="Enviar reporte por WhatsApp"
+                      >
+                        <Share2 className="w-3.5 h-3.5" /> WhatsApp
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="mt-3 bg-slate-900 rounded-lg p-3.5 font-mono text-xs text-emerald-400 whitespace-pre-wrap leading-relaxed border border-slate-800 shadow-inner">
+                    {currentAudit.formattedOutput}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Right Column: 2x2 Quadrants Detail Cards (7 cols) */}
+            <div className="lg:col-span-7 space-y-4">
+              {isProcessing ? (
+                <div className="bg-white rounded-xl border border-slate-200 p-12 text-center shadow-xs">
+                  <RefreshCw className="w-12 h-12 text-blue-600 animate-spin mx-auto mb-4" />
+                  <h3 className="font-bold text-slate-800 text-sm">El "Cerebro" de la IA analizando...</h3>
+                  <p className="text-xs text-slate-500 mt-1.5 max-w-sm mx-auto">
+                    Ejecutando la segmentación 2x2, OCR caligráfico en manuscritos y doble validación contra la Lista Maestra de Loterías.
+                  </p>
+                </div>
+              ) : currentAudit ? (
+                <>
+                  <div className="flex items-center justify-between bg-white px-4 py-3 rounded-xl border border-slate-200 shadow-xs">
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-slate-800 text-sm">
+                        Página {currentAudit.pageNumber}
+                      </span>
+                      <span className="text-xs text-slate-400">|</span>
+                      <span className="text-xs text-slate-600">
+                        {currentAudit.quadrants.filter((q) => !q.isEmpty).length} cuadrantes activos
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <div className="text-right">
+                        <span className="text-[11px] text-slate-500 font-medium block">
+                          Venta Total de la Página
                         </span>
-                        <span className="text-xs text-slate-400">|</span>
-                        <span className="text-xs text-slate-600">
-                          {currentAudit.quadrants.filter((q) => !q.isEmpty).length} cuadrantes activos
+                        <span className="text-xl font-black font-mono text-blue-600 tracking-tight">
+                          ${currentAudit.totalPageSale}
                         </span>
                       </div>
-
-                      <div className="flex items-center gap-3">
-                        <div className="text-right">
-                          <span className="text-[11px] text-slate-500 font-medium block">
-                            Venta Total de la Página
-                          </span>
-                          <span className="text-xl font-black font-mono text-blue-600 tracking-tight">
-                            ${currentAudit.totalPageSale}
-                          </span>
-                        </div>
-                      </div>
                     </div>
-
-                    {/* The 4 Quadrants arranged in a 2x2 grid corresponding to the physical sheet */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-                      {currentAudit.quadrants.map((quad) => (
-                        <QuadrantCard
-                          key={quad.id}
-                          quadrant={quad}
-                          isSelected={selectedQuadrantId === quad.id}
-                          onSelect={() => setSelectedQuadrantId(quad.id)}
-                          onUpdateQuadrant={handleUpdateQuadrant}
-                        />
-                      ))}
-                    </div>
-                  </>
-                ) : (
-                  <div className="bg-white rounded-xl border-2 border-dashed border-slate-200 p-12 text-center text-slate-400">
-                    <Brain className="w-10 h-10 text-slate-300 mx-auto mb-3" />
-                    <h3 className="font-bold text-slate-700 text-sm">Esperando imagen de ticket</h3>
-                    <p className="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
-                      Toma una foto con tu cámara o selecciona uno de los ejemplos pre-cargados arriba
-                      para que el Cerebro de la IA ejecute los 5 pasos con OCR caligráfico y validación de loterías.
-                    </p>
                   </div>
-                )}
-              </div>
+
+                  {/* The 4 Quadrants arranged in a 2x2 grid corresponding to the physical sheet */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                    {currentAudit.quadrants.map((quad) => (
+                      <QuadrantCard
+                        key={quad.id}
+                        quadrant={quad}
+                        isSelected={selectedQuadrantId === quad.id}
+                        onSelect={() => setSelectedQuadrantId(quad.id)}
+                        onUpdateQuadrant={handleUpdateQuadrant}
+                      />
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <div className="bg-white rounded-xl border border-dashed border-slate-200 p-12 text-center text-slate-400">
+                  <Brain className="w-10 h-10 text-slate-300 mx-auto mb-3 animate-pulse" />
+                  <h3 className="font-bold text-slate-700 text-sm">Esperando imagen de ticket</h3>
+                  <p className="text-xs text-slate-400 mt-1.5 max-w-sm mx-auto">
+                    Toma una foto con tu cámara o sube una imagen de un ticket
+                    para que el Cerebro de la IA ejecute los 5 pasos con OCR caligráfico y validación de loterías.
+                  </p>
+                </div>
+              )}
             </div>
           </div>
-        )}
+        </div>
       </main>
 
       {/* Modals */}

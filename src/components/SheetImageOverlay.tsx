@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { AuditResult } from '../types/lottery';
-import { ZoomIn, ZoomOut, RotateCcw, Maximize2, CheckCircle2, AlertTriangle, CircleDashed } from 'lucide-react';
+import { ZoomIn, ZoomOut, RotateCcw, Maximize2, CheckCircle2, AlertTriangle, CircleDashed, Camera, Upload } from 'lucide-react';
 
 interface SheetImageOverlayProps {
   imageSrc: string | null;
   audit: AuditResult | null;
   selectedQuadrantId?: string;
   onSelectQuadrant?: (quadrantId: string) => void;
+  onTriggerCamera?: () => void;
+  onTriggerGallery?: () => void;
 }
 
 export const SheetImageOverlay: React.FC<SheetImageOverlayProps> = ({
@@ -14,18 +16,34 @@ export const SheetImageOverlay: React.FC<SheetImageOverlayProps> = ({
   audit,
   selectedQuadrantId,
   onSelectQuadrant,
+  onTriggerCamera,
+  onTriggerGallery,
 }) => {
   const [zoom, setZoom] = useState(1);
   const [showGrid, setShowGrid] = useState(true);
 
   if (!imageSrc) {
     return (
-      <div className="w-full h-80 bg-slate-100 rounded-xl border-2 border-dashed border-slate-300 flex flex-col items-center justify-center p-6 text-center text-slate-400">
-        <CircleDashed className="w-12 h-12 mb-3 text-slate-300 animate-spin-slow" />
+      <div className="w-full h-96 bg-slate-100 rounded-xl border-2 border-dashed border-slate-300 flex flex-col items-center justify-center p-6 text-center text-slate-400">
+        <CircleDashed className="w-12 h-12 mb-3 text-slate-300 animate-spin-slow animate-pulse" />
         <span className="font-semibold text-sm text-slate-600">No hay hoja cargada</span>
-        <span className="text-xs text-slate-400 mt-1 max-w-xs">
-          Toma una foto con la cámara de tu celular, sube una imagen o selecciona un ejemplo de prueba.
+        <span className="text-xs text-slate-400 mt-1 max-w-xs mb-5">
+          Toma una foto con la cámara de tu celular o sube una imagen de tu galería para comenzar la auditoría inteligente.
         </span>
+        <div className="flex flex-col sm:flex-row gap-3 w-full max-w-xs">
+          <button
+            onClick={onTriggerCamera}
+            className="flex-1 py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-md active:scale-95 transition-all"
+          >
+            <Camera className="w-4 h-4 shrink-0" /> Tomar Foto
+          </button>
+          <button
+            onClick={onTriggerGallery}
+            className="flex-1 py-3 px-4 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs flex items-center justify-center gap-1.5 active:scale-95 transition-all"
+          >
+            <Upload className="w-4 h-4 shrink-0 text-slate-500" /> Subir Imagen
+          </button>
+        </div>
       </div>
     );
   }
