@@ -24,7 +24,6 @@ import { SAMPLE_SHEETS, generateTicketSheetCanvas, SampleSheetDefinition } from 
 import { checkSheetPrizes } from './utils/prizeCalculator';
 import { getMasterLotteries, validateAndNormalizeLottery } from './utils/lotteryMasterCatalog';
 import { QuadrantCard } from './components/QuadrantCard';
-import { BrainStepVisualizer } from './components/BrainStepVisualizer';
 import { SheetImageOverlay } from './components/SheetImageOverlay';
 import { AndroidFrame } from './components/AndroidFrame';
 import { PrizeCheckerModal } from './components/PrizeCheckerModal';
@@ -550,10 +549,7 @@ export default function App() {
         ) : (
           /* DESKTOP FULL AUDITOR VIEW */
           <div className="space-y-5">
-            {/* 5-Step Brain Visualizer */}
-            <BrainStepVisualizer audit={currentAudit} isProcessing={isProcessing} />
-
-            {/* Core Work Area: 2 Columns */}
+          {/* Core Work Area: 2 Columns */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
               {/* Left Column: Image Sheet with 2x2 Overlay (5 cols) */}
               <div className="lg:col-span-5 space-y-4">

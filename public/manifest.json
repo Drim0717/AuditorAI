@@ -1,10 +1,10 @@
 {
-  "id": "/",
+  "id": "/AuditorAI/",
   "name": "LotoAudit AI - Auditor de Tickets de Lotería",
   "short_name": "LotoAudit",
   "description": "Auditoría inteligente de tickets de lotería en cuadrícula 2x2 con OCR caligráfico y validación de lista maestra.",
-  "start_url": "/",
-  "scope": "/",
+  "start_url": "/AuditorAI/",
+  "scope": "/AuditorAI/",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#0f172a",
@@ -12,13 +12,13 @@
   "categories": ["finance", "utilities", "productivity"],
   "icons": [
     {
-      "src": "/icon.svg",
+      "src": "/AuditorAI/icon.svg",
       "sizes": "192x192 512x512",
       "type": "image/svg+xml",
       "purpose": "any"
     },
     {
-      "src": "/icon-maskable.svg",
+      "src": "/AuditorAI/icon-maskable.svg",
       "sizes": "512x512",
       "type": "image/svg+xml",
       "purpose": "maskable"
