@@ -1,0 +1,6 @@
+{
+  "name": "LotoAudit AI - Auditor de Tickets de Lotería",
+  "description": "Sistema de IA para auditoría de tickets de lotería en cuadrícula 2x2: segmentación, extracción de loterías marcadas, desglose de jugadas, lectura de círculos y doble verificación matemática.",
+  "requestFramePermissions": ["camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
